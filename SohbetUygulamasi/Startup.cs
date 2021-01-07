@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SohbetUygulamasi.Data;
+using SohbetUygulamasi.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,8 @@ namespace SohbetUygulamasi
         {
             services.AddDbContext<SohbetUygulamasiDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("SohbetUygulamasiDbContext")));
+
+            services.AddSignalR(options => options.EnableDetailedErrors = true);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,6 +48,7 @@ namespace SohbetUygulamasi
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHub<ChatHub>("/chatHub");
             });
         }
     }

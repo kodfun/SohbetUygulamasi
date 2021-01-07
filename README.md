@@ -1,6 +1,10 @@
 https://docs.microsoft.com/en-us/ef/core/dbcontext-configuration/
 https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-strings
-https://docs.microsoft.com/en-us/aspnet/core/data/ef-mvc/intro?view=aspnetcore-5.0#create-the-database-context
+https://docs.microsoft.com/en-us/aspnet/core/data/ef-mvc/intro
+https://docs.microsoft.com/en-us/aspnet/core/tutorials/signalr
+https://docs.microsoft.com/en-us/aspnet/core/signalr/groups
+https://github.com/aspnet/SignalR-samples
+https://docs.microsoft.com/en-us/javascript/api/
 
 Geliştirmek İstediğimiz Uygulama:
 Özel mesajlaşmanın ve genel sohbet odasının bulunduğu bir chat uygulaması
