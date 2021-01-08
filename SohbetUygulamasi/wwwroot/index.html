@@ -12,51 +12,56 @@
 
     <div id="girisSayfasi" class="h-100">
         <div class="h-100 d-flex align-items-center justify-content-center">
-            <div class="card">
-                <div class="card-header text-center">
-                    <h3>Sohbete Giriş</h3>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="takmaAd">Takma Adınız</label>
-                        <input type="email" class="form-control" id="takmaAd">
-                        <small id="girisHata" class="form-text text-danger d-none"></small>
+            <form id="frmGiris" novalidate>
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3>Sohbete Giriş</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="takmaAd">Takma Adınız</label>
+                            <input type="text" class="form-control" id="takmaAd" maxlength="15" autocomplete="off">
+                            <small id="girisHata" class="form-text text-danger d-none"></small>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" id="btnGirisYap" class="btn btn-primary w-100" disabled>Giriş Yap</button>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <button id="btnGirisYap" class="btn btn-primary w-100" disabled>Giriş Yap</button>
-                </div>
-            </div>
+            </form>
+
         </div>
     </div>
 
     <div id="sohbetSayfasi" class="h-100 container-fluid p-3 d-none">
         <div class="h-100 row">
-            <div class="h-100 col-9 d-flex flex-column">
+            <div class="h-100 col-md-9 col-8 d-flex flex-column">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+                        <a class="nav-link active" id="tab-genel" data-toggle="tab" href="#oda-genel" role="tab" aria-controls="genel" aria-selected="true" data-oda="#genel">Genel</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Profile</a>
+                        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false" data-oda="#oda2">Oda 2</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Contact</a>
+                        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false" data-oda="#oda3">Oda 3</a>
                     </li>
                 </ul>
-                <div class="tab-content flex-grow-1 border border-top-0" id="myTabContent">
-                    <div class="tab-pane fade show active p-3" id="home" role="tabpanel" aria-labelledby="home-tab">
-                        Tincidunt integer eu augue augue nunc elit dolor, luctus placerat scelerisque euismod, iaculis eu lacus nunc mi elit, vehicula ut laoreet ac, aliquam sit amet justo nunc tempor, metus vel.
+                <div class="tab-content flex-grow-1 border border-top-0 overflow-auto" id="myTabContent">
+                    <div class="h-100 tab-pane fade show active p-3" id="oda-genel" role="tabpanel" aria-labelledby="tab-genel" data-oda="#genel">
+                        <div class="mesajlar"></div>
                     </div>
                     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">...</div>
                     <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">...</div>
                 </div>
-                <div class="d-flex mt-2">
-                    <input type="text" id="mesaj" class="form-control" />
-                    <button id="btnMesajGonder" type="button" class="btn btn-primary ml-2" data-toggle="tooltip" title="Mesaj Gönder">Gönder</button>
-                </div>
+                <form id="frmMesaj">
+                    <div class="d-flex mt-2">
+                        <input type="text" id="mesaj" class="form-control" maxlength="400" autocomplete="off" />
+                        <button id="btnMesajGonder" type="submit" class="btn btn-primary ml-2" data-toggle="tooltip" title="Mesaj Gönder">Gönder</button>
+                    </div>
+                </form>
             </div>
-            <div class="h-100 col-3">
+            <div class="h-100 col-md-3 col-4 pl-0">
                 <div class="h-100 card">
                     <div class="card-header p-2 bg-transparent d-flex align-items-center">
                         <p class="m-0">Kullanıcılar</p>
@@ -64,8 +69,8 @@
                             <i class="fas fa-sign-out-alt"></i>
                         </button>
                     </div>
-                    <div class="card-body">
-                        <ul id="kullanicilar"></ul>
+                    <div class="card-body px-3">
+                        <ul id="kullanicilar" class="list-group list-group-flush border-top border-bottom"></ul>
                     </div>
                 </div>
             </div>

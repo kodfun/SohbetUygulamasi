@@ -1,6 +1,11 @@
-﻿var connection = null;
+﻿// todo: çıkış yapınca sohbeti temizle
+
+var connection = null;
+var takmaAdIzinVerilenKarakterler = "abcçdefgğhıijklmnoöpqrsştuüvwxyzABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ0123456789";
+var aktifOda = "#genel";
 
 $('[data-toggle="tooltip"').tooltip();
+$("#takmaAd").focus();
 
 // FUNCTIONS
 function girisHataGoster(message) {
@@ -15,11 +20,13 @@ function girisHataGizle() {
 function girisSayfasiniGoster() {
     $("#sohbetSayfasi").addClass("d-none");
     $("#girisSayfasi").removeClass("d-none");
+    $("#takmaAd").focus();
 }
 
 function sohbetSayfasiniGoster() {
     $("#girisSayfasi").addClass("d-none");
     $("#sohbetSayfasi").removeClass("d-none");
+    $("#mesaj").focus();
 }
 
 function handleError(err) {
@@ -28,8 +35,7 @@ function handleError(err) {
 
 function kullaniciListesineEkle(takmaAd) {
     $("ul#kullanicilar").append(
-        // todo: takma ad olarak özel karakterler kabul etme
-        '<li data-takma-ad="' + takmaAd + '">' + takmaAd + "</li>"
+        '<li class="list-group-item pl-0" data-takma-ad="' + takmaAd + '"><i class="fas fa-user pr-2"></i>' + takmaAd + "</li>"
     );
 }
 
@@ -44,13 +50,57 @@ function kullaniciListesineCokluEkle(takmaAdlar) {
     });
 }
 
+function odayaMesajEkle(takmaAd, mesaj, oda) {
+    var pano = panoGetir(oda);
+    $("<p/>").text(": " + mesaj).prepend($("<strong/>").text(takmaAd)).appendTo(pano);
+
+    if (oda == aktifOda) {
+        scrollToBottom();
+    }
+}
+
+function panoGetir(oda) {
+    return $('.tab-pane[data-oda="' + oda + '"] .mesajlar');
+}
+
+function takmaAdGecerliMi(takmaAd) {
+    for (var i = 0; i < takmaAd.length; i++) {
+        if (!takmaAdIzinVerilenKarakterler.includes(takmaAd[i]))
+            return false;
+    }
+    return true;
+}
+
+function scrollToBottom() {
+    var tabContent = $(".tab-content")[0];
+    tabContent.scrollTop = tabContent.scrollHeight;
+}
+
 // EVENTS
 $("#takmaAd").on("input", function () {
     girisHataGizle();
 });
 
-$("#btnGirisYap").click(function () {
-    var takmaAd = $("#takmaAd").val();
+$("#frmGiris").submit(function (event) {
+    event.preventDefault();
+
+    var takmaAd = $("#takmaAd").val().trim();
+
+    if (!takmaAd) {
+        girisHataGoster("Takma adı girmediniz.")
+        return;
+    }
+
+    if (!takmaAdGecerliMi(takmaAd)) {
+        girisHataGoster("Takma ad harf ve rakamlardan oluşabilir.")
+        return;
+    }
+
+    if (takmaAd.length > 15) {
+        girisHataGoster("Takma ad uzunluğu en fazla 15 olmalıdır.")
+        return;
+    }
+
     connection.invoke("katil", takmaAd).catch(handleError);
 });
 
@@ -62,6 +112,24 @@ $("#btnCikisYap").click(function () {
     baglan();
     girisSayfasiniGoster();
 });
+
+$("#frmMesaj").submit(function (event) {
+    event.preventDefault();
+
+    var mesaj = $("#mesaj").val().trim();
+    $("#mesaj").val("");
+    // aktifOda # ile başlıyorsa odadır @ ile başlıyorsa kullanıcıdır.
+    connection.invoke("MesajGonder", mesaj, aktifOda).catch(handleError);
+});
+
+$('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+    aktifOda = $(this).data("oda");
+});
+
+$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    scrollToBottom();
+});
+
 
 function baglan() {
     connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
@@ -81,6 +149,10 @@ function baglan() {
 
     connection.on("KullaniciSohbettenCikti", function (takmaAd) {
         kullaniciListesindenCikar(takmaAd);
+    });
+
+    connection.on("MesajAlindi", function (takmaAd, mesaj, oda) {
+        odayaMesajEkle(takmaAd, mesaj, oda);
     });
 
     connection.start().then(function () {

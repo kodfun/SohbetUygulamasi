@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using SohbetUygulamasi.Data;
+using SohbetUygulamasi.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,9 @@ namespace SohbetUygulamasi.Hubs
 
         public async Task Katil(string takmaAd)
         {
+            if (!ChatUtility.TakmaAdGecerliMi(takmaAd))
+                return;
+
             // bağlı böyle bir kullanıcı var mı?
             if (db.Kullanicilar.Any(x => x.KullaniciAd == takmaAd && x.BagliMi))
             {
@@ -56,6 +60,28 @@ namespace SohbetUygulamasi.Hubs
             await Clients.Others.SendAsync("KullaniciSohbeteGirdi", kullanici.KullaniciAd);
         }
 
+        public async Task MesajGonder(string mesaj, string alici)
+        {
+            mesaj = mesaj.Trim();
+            alici = alici.Trim();
+
+            if (string.IsNullOrEmpty(mesaj) || string.IsNullOrEmpty(alici) || mesaj.Length > 400)
+                return;
+
+            // alici # ile başlıyorsa mesajı bir odaya gönderiyordur
+            if (alici.StartsWith("#"))
+            {
+                string odaAd = alici.Substring(1);
+
+                // şu an için sadece genel adlı odayı destekliyoruz
+                if (odaAd == "genel")
+                {
+                    var kullanici = Kullanici();
+                    await Clients.Group(odaAd).SendAsync("MesajAlindi", kullanici.KullaniciAd, mesaj, alici);
+                }
+            }
+        }
+
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
@@ -80,7 +106,7 @@ namespace SohbetUygulamasi.Hubs
 
         private async Task<Kullanici> GenelOdadanCikarAsync()
         {
-            var kullanici = genelOda.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
+            var kullanici = Kullanici();
             if (kullanici != null)
             {
                 genelOda.Remove(kullanici);
@@ -91,6 +117,17 @@ namespace SohbetUygulamasi.Hubs
             return kullanici;
 
 
+        }
+
+        // şu an için sadece genel odaya destek veriyoruz
+        private Kullanici Kullanici(string odaAd = "genel")
+        {
+            if (odaAd == "genel")
+            {
+                return genelOda.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
+            }
+
+            return null;
         }
     }
 }
