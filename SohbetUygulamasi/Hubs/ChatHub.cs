@@ -60,6 +60,7 @@ namespace SohbetUygulamasi.Hubs
             await Clients.Others.SendAsync("KullaniciSohbeteGirdi", kullanici.KullaniciAd);
         }
 
+        // alici # ile başlıyorsa sohbet odasıdır, @ ile başlıyorsa kullanıcıdır
         public async Task MesajGonder(string mesaj, string alici)
         {
             mesaj = mesaj.Trim();
@@ -76,9 +77,20 @@ namespace SohbetUygulamasi.Hubs
                 // şu an için sadece genel adlı odayı destekliyoruz
                 if (odaAd == "genel")
                 {
-                    var kullanici = Kullanici();
+                    var kullanici = OdadakiKullanici();
                     await Clients.Group(odaAd).SendAsync("MesajAlindi", kullanici.KullaniciAd, mesaj, alici);
                 }
+            }
+            // alici @ ile başlıyorsa mesaj bir kullanıcıya gönderiliyordur
+            else if (alici.StartsWith("@"))
+            {
+                var gonderenAd = CallerKullanici().KullaniciAd;
+                var aliciAd = alici.Substring(1);
+                var aliciKullanici = AdiylaKullanici(aliciAd);
+                if (aliciKullanici == null) return;
+
+                await Clients.Caller.SendAsync("DmGonderildi", gonderenAd, mesaj, alici);
+                await Clients.Client(aliciKullanici.ConnectionId).SendAsync("DmAlindi", gonderenAd, mesaj, "@" + gonderenAd);
             }
         }
 
@@ -106,7 +118,7 @@ namespace SohbetUygulamasi.Hubs
 
         private async Task<Kullanici> GenelOdadanCikarAsync()
         {
-            var kullanici = Kullanici();
+            var kullanici = OdadakiKullanici();
             if (kullanici != null)
             {
                 genelOda.Remove(kullanici);
@@ -120,7 +132,7 @@ namespace SohbetUygulamasi.Hubs
         }
 
         // şu an için sadece genel odaya destek veriyoruz
-        private Kullanici Kullanici(string odaAd = "genel")
+        private Kullanici OdadakiKullanici(string odaAd = "genel")
         {
             if (odaAd == "genel")
             {
@@ -128,6 +140,16 @@ namespace SohbetUygulamasi.Hubs
             }
 
             return null;
+        }
+
+        private Kullanici AdiylaKullanici(string aliciAd)
+        {
+            return db.Kullanicilar.FirstOrDefault(x => x.KullaniciAd == aliciAd && x.BagliMi);
+        }
+
+        private Kullanici CallerKullanici()
+        {
+            return db.Kullanicilar.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId && x.BagliMi);
         }
     }
 }

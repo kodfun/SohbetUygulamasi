@@ -6,6 +6,7 @@
     <link href="lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="lib/font-awesome/css/all.min.css" rel="stylesheet" />
     <link href="css/styles.css" rel="stylesheet" />
+    <link href="img/favicon.svg" rel="icon" type="image/svg" />
     <title>Chat Uygulaması</title>
 </head>
 <body class="h-100">
@@ -40,19 +41,11 @@
                     <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="tab-genel" data-toggle="tab" href="#oda-genel" role="tab" aria-controls="genel" aria-selected="true" data-oda="#genel">Genel</a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false" data-oda="#oda2">Oda 2</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false" data-oda="#oda3">Oda 3</a>
-                    </li>
                 </ul>
                 <div class="tab-content flex-grow-1 border border-top-0 overflow-auto" id="myTabContent">
-                    <div class="h-100 tab-pane fade show active p-3" id="oda-genel" role="tabpanel" aria-labelledby="tab-genel" data-oda="#genel">
+                    <div class="tab-pane fade show active h-100 p-3" id="oda-genel" role="tabpanel" aria-labelledby="tab-genel" data-oda="#genel">
                         <div class="mesajlar"></div>
                     </div>
-                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">...</div>
-                    <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">...</div>
                 </div>
                 <form id="frmMesaj">
                     <div class="d-flex mt-2">

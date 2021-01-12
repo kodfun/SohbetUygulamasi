@@ -3,6 +3,8 @@
 var connection = null;
 var takmaAdIzinVerilenKarakterler = "abcçdefgğhıijklmnoöpqrsştuüvwxyzABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ0123456789";
 var aktifOda = "#genel";
+var tabIdSayac = 0;
+var aktifTakmaAd = null;
 
 $('[data-toggle="tooltip"').tooltip();
 $("#takmaAd").focus();
@@ -35,7 +37,9 @@ function handleError(err) {
 
 function kullaniciListesineEkle(takmaAd) {
     $("ul#kullanicilar").append(
-        '<li class="list-group-item pl-0" data-takma-ad="' + takmaAd + '"><i class="fas fa-user pr-2"></i>' + takmaAd + "</li>"
+        '<li class="list-group-item px-0" data-takma-ad="' + takmaAd + '">' +
+        '<a href="#" class="d-block" data-dm-gonder="@' + takmaAd + '"><i class="fas fa-user pr-2"></i>' + takmaAd + '</a>' +
+        '</li>'
     );
 }
 
@@ -53,10 +57,20 @@ function kullaniciListesineCokluEkle(takmaAdlar) {
 function odayaMesajEkle(takmaAd, mesaj, oda) {
     var pano = panoGetir(oda);
     $("<p/>").text(": " + mesaj).prepend($("<strong/>").text(takmaAd)).appendTo(pano);
-
-    if (oda == aktifOda) {
+    if (aktifOda == oda)
         scrollToBottom();
-    }
+}
+
+// birisinden aktif kullanıcıya mesaj geldi
+function dmGelenMesajEkle(takmaAd, mesaj, oda) {
+    yeniSekmeYoksa(oda);
+    odayaMesajEkle(takmaAd, mesaj, oda);
+}
+
+// aktif kullanıcının gönderdiği mesaj ulaştı
+function dmGidenMesajEkle(takmaAd, mesaj, oda) {
+    yeniSekmeYoksa(oda);
+    odayaMesajEkle(takmaAd, mesaj, oda);
 }
 
 function panoGetir(oda) {
@@ -76,6 +90,44 @@ function scrollToBottom() {
     tabContent.scrollTop = tabContent.scrollHeight;
 }
 
+// alici # ile başlıyorsa sohbet odasıdır, @ ile başlıyorsa kullanıcıdır
+function yeniSekme(alici) {
+    // sekme başlığını ekle
+    var sekmeBaslik =
+        '<li class="nav-item" role="presentation">' +
+        '<a class="nav-link" id="tab-' + tabIdSayac + '" data-toggle="tab" href="#tabPane-' + tabIdSayac + '" role="tab" aria-controls="' + alici + '" aria-selected="true" data-oda="' + alici + '">' + alici.substring(1) + '</a>' +
+        '</li>';
+    $("#myTab").append(sekmeBaslik);
+    // sekme panosunu ekle
+    var pano = '<div class="tab-pane fade h-100 p-3" id="tabPane-' + tabIdSayac + '" role="tabpanel" aria-labelledby="tab-' + tabIdSayac + '" data-oda="' + alici + '">' +
+        '<div class="mesajlar"></div>' +
+        '</div>';
+    $("#myTabContent").append(pano);
+    tabIdSayac++;
+}
+
+function yeniSekmeYoksa(alici) {
+    var sLink = sekmeLink(alici);
+
+    // sekme önceden oluşmamışsa
+    if (!sLink)
+        yeniSekme(alici);
+}
+
+function sekmeLink(alici) {
+    return $('#myTab > li > a[data-oda="' + alici + '"]')[0];
+}
+
+function sekmePano(oda) {
+    return $('#myTabContent > .tab-pane[data-oda="' + alici + '"]')[0];
+}
+
+function sekmeGoster(alici) {
+    aktifOda = alici;
+    var slink = sekmeLink(alici);
+    $(slink).tab('show');
+}
+
 // EVENTS
 $("#takmaAd").on("input", function () {
     girisHataGizle();
@@ -84,7 +136,7 @@ $("#takmaAd").on("input", function () {
 $("#frmGiris").submit(function (event) {
     event.preventDefault();
 
-    var takmaAd = $("#takmaAd").val().trim();
+    var takmaAd = aktifTakmaAd = $("#takmaAd").val().trim();
 
     if (!takmaAd) {
         girisHataGoster("Takma adı girmediniz.")
@@ -123,11 +175,20 @@ $("#frmMesaj").submit(function (event) {
 });
 
 $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+});
+
+$('body').on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+    scrollToBottom();
     aktifOda = $(this).data("oda");
 });
 
-$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-    scrollToBottom();
+$("body").on("dblclick", "[data-dm-gonder]", function (event) {
+    event.preventDefault();
+    var alici = $(this).data("dm-gonder");
+    if (alici == "@" + aktifTakmaAd) return;
+
+    yeniSekmeYoksa(alici);
+    sekmeGoster(alici);
 });
 
 
@@ -155,6 +216,14 @@ function baglan() {
         odayaMesajEkle(takmaAd, mesaj, oda);
     });
 
+    connection.on("DmAlindi", function (takmaAd, mesaj, oda) {
+        dmGelenMesajEkle(takmaAd, mesaj, oda);
+    });
+
+    connection.on("DmGonderildi", function (takmaAd, mesaj, oda) {
+        dmGidenMesajEkle(takmaAd, mesaj, oda);
+    });
+
     connection.start().then(function () {
         $("#btnGirisYap").prop("disabled", false);
     }).catch(function (err) {
@@ -163,3 +232,9 @@ function baglan() {
 }
 
 baglan();
+
+
+// todo: ismi çift tıklayınca adres çubuğunda # olmasın
+// sekme kapatmayı mümkün kıl
+// kullanıcı listesinde kendisini farklı renk görsün
+// yeni mesaj geldiğinde sekme başlığında okunmamış yeni mesaj sayısı görünsün
