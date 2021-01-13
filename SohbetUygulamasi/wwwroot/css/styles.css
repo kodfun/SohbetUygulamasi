@@ -1,3 +1,35 @@
 ﻿#kullanicilar .fa-user {
     color: var(--primary);
 }
+
+    #kullanicilar > li.ben a, #kullanicilar > li.ben .fa-user {
+        font-weight: bold;
+    }
+
+#kullanicilar a:hover {
+    text-decoration: none;
+}
+
+#kullanicilar > li {
+    position: relative;
+}
+
+    #kullanicilar > li.ben::after {
+        content: "\f005";
+        color: gold;
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        display: block;
+        position: absolute;
+        right: 0;
+        top: calc(50% - 12px);
+    }
+
+    .sekme-kapat {
+        padding: 1px 3px;
+        border-radius: 50%;
+    }
+
+.sekme-kapat:hover {
+    background-color: #dcdcdd;
+}

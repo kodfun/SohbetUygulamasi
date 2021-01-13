@@ -56,7 +56,8 @@ namespace SohbetUygulamasi.Hubs
             // kullanıcıyı genel sohbet odasına katalım
             await Groups.AddToGroupAsync(kullanici.ConnectionId, "genel");
             genelOda.Add(kullanici);
-            await Clients.Caller.SendAsync("SohbeteGirildi", genelOda.Select(x => x.KullaniciAd));
+            await Clients.Caller.SendAsync("SohbeteGirildi", genelOda.OrderBy(x => x.KullaniciAd)
+                .Select(x => x.KullaniciAd));
             await Clients.Others.SendAsync("KullaniciSohbeteGirdi", kullanici.KullaniciAd);
         }
 
@@ -94,6 +95,15 @@ namespace SohbetUygulamasi.Hubs
             }
         }
 
+        // oda # ile başlıyorsa sohbet odasıdır, @ ile başlıyorsa kullanıcıdır
+        public async Task OdadanAyril(string oda)
+        {
+            if (oda == "#genel")
+            {
+                await GenelOdadanCikarAsync();
+            }
+        }
+
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
@@ -101,16 +111,14 @@ namespace SohbetUygulamasi.Hubs
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var kullanici = await GenelOdadanCikarAsync();
+            await GenelOdadanCikarAsync();
+            var kullanici = CallerKullanici();
+            kullanici.BagliMi = false;
+            kullanici.CikisZamani = DateTime.Now;
+            kullanici.ConnectionId = null;
+            db.Update(kullanici);
+            db.SaveChanges();
 
-            if (kullanici != null)
-            {
-                kullanici.BagliMi = false;
-                kullanici.CikisZamani = DateTime.Now;
-                kullanici.ConnectionId = null;
-                db.Update(kullanici);
-                db.SaveChanges();
-            }
 
 
             await base.OnDisconnectedAsync(exception);

@@ -1,8 +1,6 @@
-﻿// todo: çıkış yapınca sohbeti temizle
-
+﻿var takmaAdIzinVerilenKarakterler = "abcçdefgğhıijklmnoöpqrsştuüvwxyzABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ0123456789";
 var connection = null;
-var takmaAdIzinVerilenKarakterler = "abcçdefgğhıijklmnoöpqrsştuüvwxyzABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ0123456789";
-var aktifOda = "#genel";
+var aktifOda = null;
 var tabIdSayac = 0;
 var aktifTakmaAd = null;
 
@@ -36,8 +34,9 @@ function handleError(err) {
 }
 
 function kullaniciListesineEkle(takmaAd) {
+    var kendisiMi = takmaAd == aktifTakmaAd;
     $("ul#kullanicilar").append(
-        '<li class="list-group-item px-0" data-takma-ad="' + takmaAd + '">' +
+        '<li class="list-group-item px-0' + (kendisiMi ? ' ben' : '') + '" data-takma-ad="' + takmaAd + '">' +
         '<a href="#" class="d-block" data-dm-gonder="@' + takmaAd + '"><i class="fas fa-user pr-2"></i>' + takmaAd + '</a>' +
         '</li>'
     );
@@ -95,7 +94,9 @@ function yeniSekme(alici) {
     // sekme başlığını ekle
     var sekmeBaslik =
         '<li class="nav-item" role="presentation">' +
-        '<a class="nav-link" id="tab-' + tabIdSayac + '" data-toggle="tab" href="#tabPane-' + tabIdSayac + '" role="tab" aria-controls="' + alici + '" aria-selected="true" data-oda="' + alici + '">' + alici.substring(1) + '</a>' +
+        '<a class="nav-link" id="tab-' + tabIdSayac + '" data-toggle="tab" href="#tabPane-' + tabIdSayac + '" role="tab" aria-controls="' + alici + '" aria-selected="true" data-oda="' + alici + '">' + alici.substring(1) +
+        '<i class="fas fa-times ml-2 sekme-kapat"></i>' +
+        '</a>' +
         '</li>';
     $("#myTab").append(sekmeBaslik);
     // sekme panosunu ekle
@@ -114,6 +115,10 @@ function yeniSekmeYoksa(alici) {
         yeniSekme(alici);
 }
 
+function sekmeAdet() {
+    return $('#myTab > li > a[data-oda]').length;
+}
+
 function sekmeLink(alici) {
     return $('#myTab > li > a[data-oda="' + alici + '"]')[0];
 }
@@ -126,6 +131,13 @@ function sekmeGoster(alici) {
     aktifOda = alici;
     var slink = sekmeLink(alici);
     $(slink).tab('show');
+}
+
+function sekmeGosterIndeksIle(indeks) {
+    var sAdet = sekmeAdet();
+    if (!sekmeAdet) return;
+    var i = indeks < sAdet ? indeks : sAdet - 1;
+    $('#myTab > li').eq(i).find("a").tab('show');
 }
 
 // EVENTS
@@ -158,10 +170,16 @@ $("#frmGiris").submit(function (event) {
 
 $("#btnCikisYap").click(function () {
     $("#kullanicilar").html(""); // kullanıcı listesini temizle
+    $("#myTab").html("");
+    $("#myTabContent").html("");
+    $("#frmMesaj")[0].reset();
     // https://docs.microsoft.com/en-us/javascript/api/@microsoft/signalr/hubconnection?view=signalr-js-latest#stop--
     connection.stop();
     connection = null;
     baglan();
+    aktifOda = null;
+    tabIdSayac = 0;
+    aktifTakmaAd = null;
     girisSayfasiniGoster();
 });
 
@@ -182,6 +200,10 @@ $('body').on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
     aktifOda = $(this).data("oda");
 });
 
+$("body").on("click", "[data-dm-gonder]", function (event) {
+    event.preventDefault();
+});
+
 $("body").on("dblclick", "[data-dm-gonder]", function (event) {
     event.preventDefault();
     var alici = $(this).data("dm-gonder");
@@ -189,6 +211,21 @@ $("body").on("dblclick", "[data-dm-gonder]", function (event) {
 
     yeniSekmeYoksa(alici);
     sekmeGoster(alici);
+});
+
+$("body").on("click", ".sekme-kapat", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    var a = $(this).parent();
+    var li = a.parent();
+    var tabIndex = li.index();
+    var oda = a.data("oda");
+    a.tab("dispose");
+    var pano = $(a.attr("href"));
+    li.remove();
+    pano.remove();
+    sekmeGosterIndeksIle(tabIndex);
+    connection.invoke("OdadanAyril", oda).catch(handleError);
 });
 
 
@@ -201,6 +238,8 @@ function baglan() {
 
     connection.on("SohbeteGirildi", function (kullanicilar) {
         kullaniciListesineCokluEkle(kullanicilar);
+        yeniSekme("#genel");
+        sekmeGoster("#genel")
         sohbetSayfasiniGoster();
     });
 
@@ -234,7 +273,12 @@ function baglan() {
 baglan();
 
 
-// todo: ismi çift tıklayınca adres çubuğunda # olmasın
-// sekme kapatmayı mümkün kıl
-// kullanıcı listesinde kendisini farklı renk görsün
-// yeni mesaj geldiğinde sekme başlığında okunmamış yeni mesaj sayısı görünsün
+// todo: yeni mesaj geldiğinde sekme başlığında okunmamış yeni mesaj sayısı görünsün
+// todo: aktif tabın rengi değişsin
+// todo: kullanıcılar oda bazlı olmalıdır, dm ekranlarında kullanıcı listesi olmamalıdır
+// ya da dm ekranlarında sadece konuşan kişiler kullanıcı listesinde görünebilir
+// todo: yeni oda oluştur
+// todo: kullanıcıları alfabetik listede göster (girip çıkışlardan sonra dahi)
+// todo: mobil görünüm kullanıcı listesi sağdan overlay hamburger menü
+// todo: typing..
+// todo: dm çift tık açınca mesaj kutusu focus

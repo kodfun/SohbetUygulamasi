@@ -10,7 +10,6 @@
     <title>Chat Uygulaması</title>
 </head>
 <body class="h-100">
-
     <div id="girisSayfasi" class="h-100">
         <div class="h-100 d-flex align-items-center justify-content-center">
             <form id="frmGiris" novalidate>
@@ -37,16 +36,8 @@
     <div id="sohbetSayfasi" class="h-100 container-fluid p-3 d-none">
         <div class="h-100 row">
             <div class="h-100 col-md-9 col-8 d-flex flex-column">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="tab-genel" data-toggle="tab" href="#oda-genel" role="tab" aria-controls="genel" aria-selected="true" data-oda="#genel">Genel</a>
-                    </li>
-                </ul>
-                <div class="tab-content flex-grow-1 border border-top-0 overflow-auto" id="myTabContent">
-                    <div class="tab-pane fade show active h-100 p-3" id="oda-genel" role="tabpanel" aria-labelledby="tab-genel" data-oda="#genel">
-                        <div class="mesajlar"></div>
-                    </div>
-                </div>
+                <ul class="nav nav-tabs" id="myTab" role="tablist"></ul>
+                <div class="tab-content flex-grow-1 border border-top-0 overflow-auto" id="myTabContent"></div>
                 <form id="frmMesaj">
                     <div class="d-flex mt-2">
                         <input type="text" id="mesaj" class="form-control" maxlength="400" autocomplete="off" />
